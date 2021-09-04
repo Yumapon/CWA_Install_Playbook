@@ -1,0 +1,62 @@
+---
+#---------------------------------
+# Windows Linux 両環境で設定必要
+#---------------------------------
+
+# エージェントの設定を保持する
+# リファレンス：https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html
+
+# メトリクスセットを使用して設定するか
+# 可能な値：
+# - yes
+# - no
+use_metricset: "yes"
+
+# 収集するメトリクスセットのタイプ
+# use_metricset: yes の場合に設定
+# 可能な値：
+# - Basic
+# - Standard
+# - Advanced
+# デフォルト値：
+# - Basic
+cwa_metric_set: "Basic"
+
+# StatsDを使用してメトリクスの収集を実施するか
+# use_metricset: yes の場合に設定
+# 可能な値：
+# - true
+# - false
+use_statsd: "false"
+
+# Collectdを使用してメトリクスの収集を実施するか
+# use_metricset: yes の場合に設定
+# 可能な値：
+# - true (cwa_metric_setがStandard以上の場合に設定可能)
+# - false
+use_collectd: "false"
+
+# 自身で作成した設定ファイルを使用する
+# use_metricset: noの場合に設定
+conf_json_path: "agent/custom_cwa_config.json.j2"
+
+#cwaで取得するログファイル
+collect_files:
+  - path: /var/log/ansible.log
+    name: ansible.log
+
+#---------------------------------
+# Linuxに使用する場合のみ設定必要
+#---------------------------------
+
+# 説明：ローテーションされる前のログのファイルの最大サイズ
+# 可能な値：(以下サイトを参照)
+# https://linux.die.net/man/8/logrotate
+# デフォルト値：「10M」
+logrotate_file_size: "10M"
+
+# 説明：ローテーション後に保持するファイルの最大数
+# 可能な値：
+# -https://linux.die.net/man/8/logrotate
+# デフォルト値：5
+logrotate_files: 5

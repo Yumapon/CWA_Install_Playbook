@@ -1,0 +1,26 @@
+---
+- name: cloudwatchagent設定ファイルをインスタンスへ展開
+  template:
+    src: agent/cwa-config-for-rhel.json.j2
+    dest: "{{ cwa_agent_config_file }}"
+    mode: 0644
+    force: true
+  when: use_metricset == 'yes'
+  notify: Reload amazon-cloudwatch-agent for RHEL
+
+- name: カスタムcloudwatchagent設定ファイルをインスタンスへ展開
+  template:
+    src: "{{ conf_json_path }}"
+    dest: "{{ cwa_agent_config_file }}"
+    mode: 0644
+    force: yes
+  when: use_metricset == 'no'
+  notify: Reload amazon-cloudwatch-agent for RHEL
+
+- name: logrotate設定ファイルをインスタンスへ展開
+  template:
+    src: logrotate/cwa-logrotate.j2
+    dest: "{{ cwa_logrotate_config_file }}"
+    mode: 0644
+    force: true
+  notify: Reload logrotate

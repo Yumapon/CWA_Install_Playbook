@@ -1,0 +1,18 @@
+---
+- name: cloudwatchagent設定ファイルをインスタンスへ展開
+  template:
+    src: agent/cwa-config-for-windows.json.j2
+    dest: "{{ cwa_agent_config_file }}"
+    mode: 0644
+    force: true
+  when: use_metricset == 'yes'
+  notify: Reload amazon-cloudwatch-agent for Windows
+
+- name: カスタムcloudwatchagent設定ファイルをインスタンスへ展開
+  template:
+    src: "{{ conf_json_path }}"
+    dest: "{{ cwa_agent_config_file }}"
+    mode: 0644
+    force: yes
+  when: use_metricset == 'no'
+  notify: Reload amazon-cloudwatch-agent for Windows

@@ -1,0 +1,10 @@
+---
+#インストールする環境
+cwa_agent_mode: "ec2"
+
+#インストールのタイムアウト
+cwa_global_downloads_timeout: 240
+
+#タスクのリトライ数・ループの遅延時間(秒)設定
+cwa_global_downloads_retries: 5
+cwa_global_downloads_delay: 2

@@ -1,0 +1,31 @@
+---
+#--------------------------------
+# Windows用のtask
+#--------------------------------
+#
+# 下記手順の通りセットアップを進めていく
+# https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent-commandline-fleet.html
+- name: CloudwatchAgentをダウンロードする
+  win_get_url: 
+    url: "{{ cwa_download_link }}"
+    dest: "{{ cwa_temp_path }}\\{{ cwa_package }}.msi"
+    url_timeout: "{{ cwa_global_downloads_timeout }}"
+
+#- name: CloudwatchAgentの公開鍵をダウンロード
+
+#- name: CloudWatchAgentの署名ファイルをダウンロード
+
+#- name: CloudWatchAgentの署名を確認
+
+- name: パッケージ {{ cwa_package }}.msi のインストール on Windows
+  win_package:
+    path: "{{ cwa_temp_path }}\\{{ cwa_package }}.msi"
+    product_id: "5D3EF386-F834-49B7-9B99-3C59BC22FE08"
+    arguments: "/q"
+  when: >
+    ansible_os_family == 'Windows' 
+    and (
+      ansible_distribution == 'Microsoft Windows Server 2016 Datacenter' or
+      ansible_distribution == 'Microsoft Windows Server 2019 Datacenter'
+    )
+  ignore_errors: "{{ ansible_check_mode }}"

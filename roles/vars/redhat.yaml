@@ -1,0 +1,44 @@
+---
+#-----------------
+# varファイル使用方針
+# ほぼ定数である値を入力する際は、varに記入する。
+# 実行のつど変更させたい、変数として使用する場合はdefaults/main.yamlを使用
+#
+# 当ファイルにはRHELのみ固有の設定値のみ定義する
+#-----------------
+#インストールするパッケージ名
+cwa_package: amazon-cloudwatch-agent
+
+#作業フォルダ
+cwa_temp_path: /tmp
+
+#Cwaのインストール元
+cwa_download_link: https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+
+#CloudWatchAgentをインストールするパス
+cwa_install_path: /opt/aws/amazon-cloudwatch-agent
+
+#CloudWatchAgentのコマンドのパス
+cwa_agent_ctl: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl
+
+#cwaの公開鍵URL（全Linux系OSで共通）
+cwa_package_gpg: https://s3.amazonaws.com/amazoncloudwatch-agent/assets/amazon-cloudwatch-agent.gpg
+
+#署名ファイル
+cwa_package_signature: https://s3.amazonaws.com/amazoncloudwatch-agent/redhat/amd64/latest/amazon-cloudwatch-agent.rpm.sig
+
+#cwaの設定ファイル格納場所
+cwa_agent_log_file: "{{ cwa_install_path }}/logs/amazon-cloudwatch-agent.log"
+cwa_agent_config_file: "{{ cwa_install_path }}/etc/cwa-config.json"
+
+#cwaのlogrotate定義
+cwa_logrotate_config_file: /etc/logrotate.d/aws-cwa
+cwa_logrotate_daemon: logrotate
+
+#collectdをインストールする場合に必要なRHELの運用ツール
+epel_url_rhel8: https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+epel_url_rhel7: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
+#Cwaが動作するための前提Package(Basicならcollectdは不要)
+cwa_dependencies_packages:
+ - collectd

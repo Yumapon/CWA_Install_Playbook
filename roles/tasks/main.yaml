@@ -1,0 +1,89 @@
+---
+# 下記手順の通りCloudWatchAgentのセットアップを進めていく
+# https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent-on-first-instance.html
+# https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/verify-CloudWatch-Agent-Package-Signature.html
+
+#-----------------------
+# 指定したFactを取得する
+#-----------------------
+- name: Collect only selected facts
+  ansible.builtin.setup:
+    filter:
+      - 'ansible_os_family'
+      - 'ansible_distribution'
+      - 'ansible_distribution_major_version'
+      - 'ansible_check_mode'
+
+#-----------------------
+# 変数のインポート
+#-----------------------
+#RHEL7,8の場合
+- name: RHEL用の変数を読み込む
+  include_vars: "redhat.yaml"
+  when: >
+    ansible_os_family == 'RedHat' and
+    ansible_distribution == 'RedHat'
+    and (
+      ansible_distribution_major_version == '8' or
+      ansible_distribution_major_version == '7'
+    )
+
+#Windows2016,2019の場合
+#TODO Windows2019バージョンの検証
+- name: Windows用の変数を読み込む
+  include_vars: "windows.yaml"
+  when: >
+    ansible_os_family == 'Windows' 
+    and (
+      ansible_distribution == 'Microsoft Windows Server 2016 Datacenter' or
+      ansible_distribution == 'Microsoft Windows Server 2019 Datacenter'
+    )
+
+#Mainの設定ファイルを読み込む(Windows,Linux共通)
+#メモ：現状Windows,Linux共通はほぼない。
+- name: 全環境共通の変数を読み込む
+  include_vars: "main.yaml"
+
+#-----------------------
+# タスクのインポート
+#-----------------------
+#cwaのインストール
+#RHEL7,8の場合
+- name: RHEL用のタスクを読み込む
+  include_tasks: "install-{{ ansible_os_family|lower }}.yaml"
+  when: >
+    ansible_os_family == 'RedHat' and (
+      ansible_distribution == 'RedHat'
+    )
+
+#cwaのインストール
+#Windows2016,2019の場合
+#TODO Windows2019バージョンの検証
+- name: Windows用のタスクを読み込む
+  include_tasks: "install-{{ ansible_os_family|lower }}.yaml"
+  when: >
+    ansible_os_family == 'Windows' 
+    and (
+      ansible_distribution == 'Microsoft Windows Server 2016 Datacenter' or
+      ansible_distribution == 'Microsoft Windows Server 2019 Datacenter'
+    )
+
+# Agentのセットアップ、実行
+# RHEL7,8の場合
+- name: Configure {{ cwa_package }} for RHEL
+  include_tasks: "configure-{{ ansible_os_family|lower }}.yaml"
+  when: >
+    ansible_os_family == 'RedHat' and (
+      ansible_distribution == 'RedHat'
+    )
+
+# Agentのセットアップ、実行
+#Windows2016,2019の場合
+- name: Configure {{ cwa_package }} for Windows
+  include_tasks: "configure-{{ ansible_os_family|lower }}.yaml"
+  when: >
+    ansible_os_family == 'Windows' 
+    and (
+      ansible_distribution == 'Microsoft Windows Server 2016 Datacenter' or
+      ansible_distribution == 'Microsoft Windows Server 2019 Datacenter'
+    )

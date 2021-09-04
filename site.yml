@@ -1,0 +1,6 @@
+---
+- name: Agent構築
+  hosts: targetservers
+  gather_facts: yes
+  roles:
+   - roles

@@ -1,0 +1,18 @@
+---
+#インストールするパッケージ名
+cwa_package: amazon-cloudwatch-agent
+
+#Cwaのインストール元
+cwa_download_link: https://s3.amazonaws.com/amazoncloudwatch-agent/windows/amd64/latest/amazon-cloudwatch-agent.msi
+
+#作業フォルダ
+cwa_temp_path: "C:\\Users\\Administrator\\Downloads"
+
+#CloudWatchAgentをインストールするパス
+cwa_install_path: "C:\\Program Files\\Amazon\\AmazonCloudWatchAgent"
+
+#cwaの設定ファイル置き場
+cwa_agent_config_file: "C:\\ProgramData\\Amazon\\AmazonCloudWatchAgent\\amazon-cloudwatch-agent.json"
+
+#インストールされたpsの場所
+cwa_ps_path: "C:\\Program Files\\Amazon\\AmazonCloudWatchAgent\\amazon-cloudwatch-agent-ctl.ps1"

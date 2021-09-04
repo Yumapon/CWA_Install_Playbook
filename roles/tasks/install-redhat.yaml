@@ -1,0 +1,134 @@
+---
+#--------------------------------
+# RHEL7.8用のtask
+# TODO RHEL7の検証
+#--------------------------------
+#
+# 下記手順の通りセットアップを進めていく
+# https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent-commandline-fleet.html
+- name: CloudwatchAgentをダウンロードする
+  enviroment:
+    http_proxy: http://10.0.1.5:8080
+    https_proxy: http://10.0.1.5:8080
+  get_url:
+    url: "{{ cwa_download_link }}"
+    dest: "{{ cwa_temp_path }}/{{ cwa_package }}.rpm"
+    timeout: "{{ cwa_global_downloads_timeout }}"
+  register: download_result
+  until: download_result | succeeded
+  retries: 3
+
+- name: CloudwatchAgentの公開鍵をダウンロード
+  rpm_key:
+    state: present
+    key: "{{ cwa_package_gpg }}"
+
+- name: CloudWatchAgentの署名ファイルをダウンロード
+  get_url:
+    url: "{{ cwa_package_signature }}"
+    dest: "{{ cwa_temp_path }}/{{ cwa_package }}.rpm.sig"
+    timeout: "{{ cwa_global_downloads_timeout }}"
+
+- name: CloudWatchAgentの署名を確認
+  command: gpg --verify {{ cwa_package }}.rpm.sig {{ cwa_package }}.rpm
+  register: verified_sig
+  failed_when: "'BAD' in verified_sig.stderr"
+  changed_when: false
+  args:
+    chdir: "{{ cwa_temp_path }}"
+
+# use_collectd: true　の場合のみ実行
+- name: Collectdをインストールする。
+  block:
+    - name:  運用ツールのリポジトリーを有効化する(RHEL8)
+      dnf:
+        name: "{{ epel_url_rhel8 }}"
+        disable_gpg_check: true
+        state: present
+      register: package_ok
+      retries: "{{ cwa_global_downloads_retries }}"
+      delay: "{{ cwa_global_downloads_delay }}"
+      until: package_ok is success
+      when: >
+        ansible_os_family == 'RedHat' and (
+          ansible_distribution == 'RedHat'
+        ) and (
+          ansible_distribution_major_version == '8'
+        )
+    - name:  運用ツールのリポジトリーを有効化する(RHEL7)
+      yum:
+        name: "{{ epel_url_rhel7 }}"
+        disable_gpg_check: true
+        state: present
+      register: package_ok
+      retries: "{{ cwa_global_downloads_retries }}"
+      delay: "{{ cwa_global_downloads_delay }}"
+      until: package_ok is success
+      when: >
+        ansible_os_family == 'RedHat' and (
+          ansible_distribution == 'RedHat'
+        ) and (
+          ansible_distribution_major_version == '7'
+        )
+    - name:  パッケージをインストールする
+      yum:
+        name: "{{ cwa_dependencies_packages }}"
+        state: present
+      register: package_ok
+      retries: "{{ cwa_global_downloads_retries }}"
+      delay: "{{ cwa_global_downloads_delay }}"
+      until: package_ok is success
+      when: >
+        ansible_os_family == 'RedHat' and (
+          ansible_distribution == 'RedHat'
+        ) and (
+          ansible_distribution_major_version == '8' or
+          ansible_distribution_major_version == '7'
+        )
+  when: >
+        "'true' in use_collectd" and (
+          cwa_metric_set == 'Standard' or
+          cwa_metric_set == 'Advanced'
+        )
+
+#RHEL7:ダウンロードしたCloudWatchAgentのパッケージをインストール
+- name: パッケージ {{ cwa_package }}.rpm のインストール on ReHat7
+  enviroment:
+    http_proxy: http://10.0.1.5:8080
+    https_proxy: http://10.0.1.5:8080
+  yum:
+    name: "{{ cwa_temp_path }}/{{ cwa_package }}.rpm"
+    disable_gpg_check: true
+    state: present
+  register: package_ok
+  retries: "{{ cwa_global_downloads_retries }}"
+  delay: "{{ cwa_global_downloads_delay }}"
+  until: package_ok is success
+  when: >
+    ansible_os_family == 'RedHat' and (
+      ansible_distribution == 'RedHat'
+    ) and (
+      ansible_distribution_major_version == '7'
+    )
+  ignore_errors: "{{ ansible_check_mode }}"
+
+#RHEL8:ダウンロードしたCloudWatchAgentのパッケージをインストール
+#yumがアップデートでRHEL8からdnfに変わった。
+- name: パッケージ {{ cwa_package }}.rpm のインストール on ReHat8
+  enviroment:
+    http_proxy: http://10.0.1.5:8080
+    https_proxy: http://10.0.1.5:8080
+  dnf:
+    name: "{{ cwa_temp_path }}/{{ cwa_package }}.rpm"
+    disable_gpg_check: true
+    state: present
+  register: package_ok
+  retries: "{{ cwa_global_downloads_retries }}"
+  delay: "{{ cwa_global_downloads_delay }}"
+  until: package_ok is success
+  when: >
+    ansible_os_family == 'RedHat' and (
+      ansible_distribution == 'RedHat'
+    ) and
+    ansible_distribution_major_version == '8'
+  ignore_errors: "{{ ansible_check_mode }}"

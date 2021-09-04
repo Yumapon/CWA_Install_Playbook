@@ -1,0 +1,126 @@
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "root",
+    "logfile": "{{ cwa_agent_log_file }}"
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {% if collect_files is defined %}
+          {% for item in collect_files %}
+
+          {
+            "file_path": "{{ item.path }}",
+            "log_group_name": "{{ item.name }}",
+            "log_stream_name": "{instance_id}"
+          },
+          {% endfor %}
+          {% endif %}
+
+          {
+            "file_path": "/var/log/messages",
+            "log_group_name": "messages",
+            "log_stream_name": "{instance_id}"
+          },
+          {
+            "file_path": "/var/log/secure",
+            "log_group_name": "secure",
+            "log_stream_name": "{instance_id}"
+          }
+        ]
+      }
+    }
+  },
+  "metrics": {
+    "append_dimensions": {
+      "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+      "ImageId": "${aws:ImageId}",
+      "InstanceId": "${aws:InstanceId}",
+      "InstanceType": "${aws:InstanceType}"
+    },
+    "metrics_collected": {
+      {% if use_statsd == "true" %}
+
+      "statsd": {
+        "metrics_aggregation_interval": 60,
+        "metrics_collection_interval": 10,
+        "service_address": ":8125"
+      }
+      {% endif %}
+      {% if use_collectd == "true" %}
+
+      "collectd": {
+        "metrics_aggregation_interval": 60
+      }
+      {% endif %}
+      {% if ( cwa_metric_set == "Standard" or cwa_metric_set == "Advanced" ) %}
+
+      "cpu": {
+          "measurement": [
+            "cpu_usage_idle",
+            "cpu_usage_iowait",
+            "cpu_usage_user",
+            "cpu_usage_system"
+          ],
+          "metrics_collection_interval": 60,
+          "totalcpu": false
+      },
+      "diskio": {
+        "measurement": [
+          {% if cwa_metric_set == "Advanced" %}
+
+          "write_bytes",
+          "read_bytes",
+          "writes",
+          "reads",
+          {% endif %}
+          "io_time"
+        ],
+        "metrics_collection_interval": 60,
+        "resources": [
+          "*"
+        ]
+      },
+      "swap": {
+        "measurement": [
+          "swap_used_percent"
+        ],
+        "metrics_collection_interval": 60
+      },
+      {% endif %}
+      {% if cwa_metric_set == "Advanced" %}
+
+      "netstat": {
+        "measurement": [
+          "tcp_established",
+          "tcp_time_wait"
+        ],
+        "metrics_collection_interval": 60
+      },
+      {% endif %}
+
+      "disk": {
+        "measurement": [
+          {% if ( cwa_metric_set == "Standard" or cwa_metric_set == "Advanced" ) %}
+          
+          "inodes_free",
+          {% endif %}
+          
+          "used_percent"
+        ],
+        "metrics_collection_interval": 60,
+        "resources": [
+          "*"
+        ]
+      },
+      "mem": {
+        "measurement": [
+          "mem_used_percent"
+        ],
+        "metrics_collection_interval": 60
+      }
+    }
+  }
+}
